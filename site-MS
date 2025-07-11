@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Terminal do Computador Pessoal de [EXPURGADO]</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: #000;
+      color: #00ff88;
+      font-family: 'Share Tech Mono', monospace;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    .terminal {
+      padding: 32px 18px;
+      white-space: pre-wrap;
+      height: 100vh;
+      box-sizing: border-box;
+      overflow-y: auto;
+      font-size: 1.12em;
+      letter-spacing: 0.02em;
+      scrollbar-width: thin;
+      scrollbar-color: #00ff88 #000;
+      transition: color 0.2s;
+    }
+    .ascii {
+      position: fixed;
+      left: 0; top: 0;
+      width: 100vw; height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      pointer-events: none;
+      z-index: 999;
+    }
+    .ascii pre {
+      color: #b900ff;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.3vw;
+      text-shadow: 0 0 6px #000, 0 0 20px #b900ff;
+      margin: 0;
+      user-select: none;
+      filter: drop-shadow(0 0 10px #b900ff);
+      animation: ascii-show 1.2s cubic-bezier(.19,1,.22,1) forwards;
+      white-space: pre;
+      line-height: 1.05em;
+      letter-spacing: 0.10em;
+      text-align: center;
+    }
+    .question-block {
+      position: fixed;
+      left: 0; top: 0;
+      width: 100vw; height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 1001;
+      flex-direction: column;
+    }
+    .question {
+      color: #b900ff;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 2vw;
+      text-shadow: 0 0 6px #000, 0 0 20px #b900ff;
+      margin: 0 0 32px 0;
+      user-select: none;
+      filter: drop-shadow(0 0 10px #b900ff);
+      white-space: pre-line;
+      line-height: 1.2em;
+      letter-spacing: 0.11em;
+      text-align: center;
+      min-height: 3.8em;
+      opacity: 1;
+      pointer-events: auto;
+      display: block;
+      font-weight: bold; /* Negrito na pergunta! */
+    }
+    .choices {
+      display: flex;
+      gap: 32px;
+      justify-content: center;
+      pointer-events: auto;
+    }
+    .btn {
+      background: transparent;
+      color: #b900ff;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.45vw;
+      font-weight: bold;
+      padding: 12px 36px 14px 36px;
+      border: none;
+      border-bottom: 4px solid #b900ff;
+      border-radius: 6px 6px 0 0;
+      cursor: pointer;
+      box-shadow: 0 0 12px #b900ff33;
+      outline: none;
+      margin-top: 0;
+      user-select: none;
+      pointer-events: auto;
+      transition: border-color 0.2s, color 0.2s;
+      text-shadow: 0 0 7px #b900ff, 0 0 18px #b900ff;
+      letter-spacing: 0.09em;
+      position: relative;
+    }
+    .btn:active {
+      filter: brightness(0.85);
+    }
+    .btn-no {
+      border-bottom: 4px solid #b900ff;
+      color: #b900ff;
+      text-shadow: 0 0 7px #b900ff, 0 0 18px #b900ff;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      background: transparent;
+    }
+    .btn-no.error {
+      border-bottom: 4px solid #ff2222;
+      color: #fff;
+      background: transparent;
+      text-shadow: 0 0 7px #ff2222, 0 0 14px #ff2222;
+      pointer-events: none;
+      cursor: not-allowed;
+      text-decoration: line-through;
+      font-style: italic;
+    }
+    .btn-no.error::before {
+      content: "";
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 50%;
+      height: 2px;
+      background: #fff;
+      transform: translateY(-50%) rotate(-6deg);
+      box-shadow: 0 0 8px #ff2222, 0 0 20px #ff2222;
+      z-index: 2;
+    }
+    @keyframes ascii-show {
+      from { opacity: 0; filter: blur(0.4em) drop-shadow(0 0 2em #000);}
+      to   { opacity: 1; filter: blur(0em) drop-shadow(0 0 0.2em #b900ff);}
+    }
+    .red { color: #ff2222; }
+    .purple { color: #b900ff; }
+    .blink { animation: blink 0.8s steps(1) infinite; }
+    @keyframes blink {
+      0% { opacity: 1; }
+      47% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    .email-link {
+      color: #3498db !important;
+      text-decoration: underline;
+      font-weight: bold;
+    }
+    .email-intercepted {
+      font-size: 3.2em;
+      font-weight: bold;
+      color: #fff;
+      display: block;
+      margin-bottom: 0.6em;
+      letter-spacing: 0.03em;
+      text-shadow: 0 0 16px #b900ff, 0 0 6px #000;
+    }
+    .fala {
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="terminal" id="terminal"></div>
+  <div class="ascii" id="ascii" style="display:none">
+    <pre id="ascii-text"></pre>
+  </div>
+  <div class="question-block" id="question-block" style="display:none;">
+    <div class="question" id="question-text"></div>
+    <div class="choices" id="choices" style="display:none;">
+      <button class="btn" id="btn-sim">Sim</button>
+      <button class="btn btn-no" id="btn-nao">Não</button>
+    </div>
+  </div>
+  <script>
+    const bootLines = [
+      "Initializing system hardware...",
+      "Checking memory: 64KB OK",
+      "Loading BIOS...",
+      "Detecting drives...",
+      "  Floppy drive A: 1.44MB found",
+      "  Hard drive C: 20MB found",
+      "Performing POST (Power-On Self Test)...",
+      "Keyboard detected",
+      "Mouse detected",
+      "Loading operating system...",
+      "Starting MS-DOS version 6.22",
+      "Configuring system settings...",
+      "Loading drivers...",
+      "  HIMEM.SYS loaded",
+      "  EMM386.EXE loaded",
+      "Initializing network protocols..."
+    ];
+
+    // Função para transformar textos entre aspas em itálico (não mexe no resto!)
+    function formatFalas(text) {
+      // Substitui "conteúdo" por <span class="fala">conteúdo</span>
+      return text.replace(/"([^"]+)"/g, '<span class="fala">"$1"</span>');
+    }
+
+    // Conteúdo da mensagem interceptada com marcação HTML
+    const interceptedEmail = `
+<span class="email-intercepted">Email Interceptado</span>
+
+Assunto: [EXPURGADO]
+De: [EXPURGADO]
+Para: [Você] 
+Data: [EXPURGADO]
+Notas de Análise:  Sinal criptografado de origem desconhecida.
+
+Mensagem: 
+
+${formatFalas(`“Somos um movimento, unificado por uma crença comum: que a humanidade e todos os outros povos dos mundos conhecidos não merecem ser mantidos na escuridão e na ignorância.”`)}
+
+Este arquivo, é uma introdução sobre a Mão da Serpente.
+
+O que é a Mão da Serpente?
+
+Ela é uma organização que vai contra os princípios da fundação SCP, Nos acreditamos que todo o SCP’s devem ser divulgados ao publico, nos somos completamente opostos a visão da GOC, resumindo a GOC é uma organização responsável por matar os SCP’s.
+
+O que fazemos?
+
+A gente tem um objetivo bem claro libertar os SCP’s, e se for de nosso interesse podemos usar eles como ajuda para soltar outros SCP’s.
+
+Vocês são os monstros dos quais tem tanto medo. Deixe de lado o seu medo e junte-se a nós na luz. 
+${formatFalas(`	“E se você não vai... se você continuar aprisionando e matando inocentes, se você continuar forçando o mundo a ficar no escuro... 
+então você encontrará o destino de todos os traficantes de escravos e assassinos na história dos mundos antes de você. 
+Vamos libertar aqueles que você mantém presos. Vamos resgatar aqueles que você tentar matar.“`)}
+														- A Mão da Serpente em "North Star".
+Caso tenha enteres entre em contato clicando <span class="email-link"><a href="https://discord.gg/ZAKDpHQBd6" target="_blank" class="email-link">aqui</a></span> 
+
+<span class="email-intercepted">Fim da mensagem</span>
+`;
+
+    const terminal = document.getElementById('terminal');
+    let lineIndex = 0;
+
+    function beep() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.value = 220;
+        gain.gain.value = 0.08;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        setTimeout(() => {
+          osc.stop();
+          ctx.close();
+        }, 140);
+      } catch (e) {}
+    }
+
+    function scrollIfNeeded() {
+      if (terminal.scrollHeight - terminal.clientHeight - terminal.scrollTop < 80) {
+        terminal.scrollTop = terminal.scrollHeight;
+      }
+    }
+
+    function typeLine(line, colorClass, callback, speed=22) {
+      let idx = 0;
+      let base = terminal.innerHTML;
+      function type() {
+        terminal.innerHTML = base +
+          (colorClass ? `<span class="${colorClass}">` : '') +
+          line.slice(0, idx) +
+          (idx < line.length ? '<span class="blink">█</span>' : '') +
+          (colorClass ? '</span>' : '');
+        scrollIfNeeded();
+        if (idx < line.length) {
+          idx++;
+          setTimeout(type, speed + Math.random() * 10);
+        } else {
+          terminal.innerHTML = base +
+            (colorClass ? `<span class="${colorClass}">` : '') +
+            line +
+            (colorClass ? '</span>' : '') +
+            "\n";
+          scrollIfNeeded();
+          if (callback) callback();
+        }
+      }
+      type();
+    }
+
+    function showAntivirus(callback) {
+      let i = 0;
+      function addLine() {
+        terminal.innerHTML += '<span class="red">Anti-virus detected a threat (O ant-virus detectou uma ameaça)</span>\n';
+        beep();
+        scrollIfNeeded();
+        i++;
+        if (i < 5) {
+          setTimeout(addLine, 420);
+        } else {
+          setTimeout(callback, 500);
+        }
+      }
+      addLine();
+    }
+
+    function showPurple(callback) {
+      typeLine("Tarde de mais", "purple", callback, 40);
+    }
+
+    function eraseTerminal(duration = 2800, callback) {
+      const fullText = terminal.innerHTML;
+      let length = fullText.length;
+      let interval = duration / length;
+      let idx = 0;
+      function erase() {
+        if (idx <= length) {
+          let current = fullText.slice(0, length - idx);
+          terminal.innerHTML = current + '<span class="blink"></span>';
+          scrollIfNeeded();
+          idx += Math.ceil(length / (duration / 20));
+          setTimeout(erase, interval);
+        } else {
+          terminal.innerHTML = "";
+          if (callback) callback();
+        }
+      }
+      erase();
+    }
+
+    const asciiArt = [
+"          _____                    _____          ",
+"         /\\    \\                  /\\    \\         ",
+"        /::\\____\\                /::\\    \\        ",
+"       /::::|   |               /::::\\    \\       ",
+"      /:::::|   |              /::::::\\    \\      ",
+"     /::::::|   |             /:::/\\:::\\    \\     ",
+"    /:::/|::|   |            /:::/__\\:::\\    \\    ",
+"   /:::/ |::|   |            \\:::\\   \\:::\\    \\   ",
+"  /:::/  |::|___|______    ___\\:::\\   \\:::\\    \\  ",
+" /:::/   |::::::::\\    \\  /\\   \\:::\\   \\:::\\    \\ ",
+"/:::/    |:::::::::\\____\\/::\\   \\:::\\   \\:::\\____\\",
+"\\::/    / ~~~~~/:::/    /\\:::\\   \\:::\\   \\::/    /",
+" \\/____/      /:::/    /  \\:::\\   \\:::\\   \\/____/ ",
+"             /:::/    /    \\:::\\   \\:::\\    \\     ",
+"            /:::/    /      \\:::\\   \\:::\\____\\    ",
+"           /:::/    /        \\:::\\  /:::/    /    ",
+"          /:::/    /          \\:::\\/:::/    /     ",
+"         /:::/    /            \\::::::/    /      ",
+"        /:::/    /              \\::::/    /       ",
+"        \\::/    /                \\::/    /        ",
+"         \\/____/                  \\/____/         ",
+"                                                  "
+    ];
+
+    function showAsciiArt(nextCallback) {
+      const ascii = document.getElementById('ascii');
+      const asciiText = document.getElementById('ascii-text');
+      asciiText.textContent = asciiArt.join('\n');
+      ascii.style.display = '';
+      setTimeout(nextCallback, 1800);
+    }
+
+    function typeQuestion(text, callback) {
+      const questionElem = document.getElementById('question-text');
+      let idx = 0;
+      questionElem.innerHTML = '';
+      // Adiciona negrito
+      function type() {
+        questionElem.innerHTML =
+          `<span style="color:#b900ff;text-shadow:0 0 6px #000,0 0 20px #b900ff;filter:drop-shadow(0 0 10px #b900ff);font-weight:bold;">${text.slice(0, idx)}${idx < text.length ? '<span class="blink">█</span>' : ''}</span>`;
+        if (idx < text.length) {
+          idx++;
+          setTimeout(type, 32 + Math.random() * 13);
+        } else {
+          questionElem.innerHTML =
+            `<span style="color:#b900ff;text-shadow:0 0 6px #000,0 0 20px #b900ff;filter:drop-shadow(0 0 10px #b900ff);font-weight:bold;">${text}</span>`;
+          if (callback) callback();
+        }
+      }
+      type();
+    }
+
+    function showQuestion() {
+      document.getElementById('ascii').style.display = 'none';
+      const qBlock = document.getElementById('question-block');
+      qBlock.style.display = 'flex';
+      const choices = document.getElementById('choices');
+      choices.style.display = 'none';
+
+      typeQuestion(
+        `Status: 1 Email recebido\nvocê deseja abri-lo?`,
+        () => {
+          choices.style.display = 'flex';
+          // Botão 'Não' vira 'ERROR' vermelho, sublinhado, texto cortado ao clicar
+          const btnNao = document.getElementById('btn-nao');
+          btnNao.textContent = 'Não';
+          btnNao.classList.remove('error');
+          btnNao.disabled = false;
+          btnNao.onclick = function() {
+            btnNao.textContent = 'ERROR';
+            btnNao.classList.add('error');
+            btnNao.disabled = true;
+          };
+          // Botão 'Sim' agora mostra a animação de descriptografia e depois o arquivo
+          const btnSim = document.getElementById('btn-sim');
+          btnSim.onclick = function(){
+            document.getElementById('question-block').style.display = 'none';
+            decryptAnimation(showEmailFile);
+          };
+        }
+      );
+    }
+
+    // Função de animação de "Descriptografando o arquivo ..."
+    function decryptAnimation(callback) {
+      const msg = "Descriptografando o arquivo";
+      let count = 0;
+      let dot = 0;
+      function animate() {
+        let dots = '.'.repeat(dot);
+        terminal.innerHTML = `<span>${msg}${dots}</span>`;
+        scrollIfNeeded();
+        dot = (dot + 1) % 4; // 0,1,2,3
+        if (dot === 0) count++;
+        if (count < 5) {
+          setTimeout(animate, 180); // animação rápida
+        } else {
+          callback();
+        }
+      }
+      animate();
+    }
+
+    // Função para mostrar o arquivo interceptado
+    function showEmailFile() {
+      terminal.innerHTML = interceptedEmail;
+      scrollIfNeeded();
+    }
+
+    // Sequência principal
+    function nextBootLine() {
+      if (lineIndex < bootLines.length) {
+        typeLine(bootLines[lineIndex], "", () => {
+          lineIndex++;
+          setTimeout(nextBootLine, 90);
+        }, 18);
+      } else {
+        showAntivirus(() => {
+          showPurple(() => {
+            setTimeout(() => {
+              eraseTerminal(2000, () => {
+                showAsciiArt(showQuestion);
+              });
+            }, 600);
+          });
+        });
+      }
+    }
+
+    window.onload = nextBootLine;
+  </script>
+</body>
+</html>
